@@ -1198,9 +1198,11 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 					let dst := add(array, 0x20)
 					switch gt(add(src, length), end) case 1 { revert(0, 0) }
 					<copyToMemFun>(src, dst, length)
+				}
 			)"
 		);
 		templ("functionName", functionName);
+		templ("load", _fromMemory ? "mload" : "calldataload");
 		templ("allocate", allocationFunction());
 		templ("allocationSize", arrayAllocationSizeFunction(_type));
 		templ("copyToMemFun", copyToMemoryFunction(!_fromMemory));
