@@ -66,8 +66,8 @@ inline std::string toHexAndSplit(T const& _data)
 {
 	std::string str = toHex(_data);
 	std::string withNewlines;
-	for (size_t i = 0; i < str.length(); i += 0x20)
-		withNewlines += str.substr(i, 0x20) + "\n";
+	for (size_t i = 0; i < str.length(); i += 0x40)
+		withNewlines += str.substr(i, 0x40) + "\n";
 	return withNewlines;
 }
 
