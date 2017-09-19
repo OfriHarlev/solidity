@@ -27,6 +27,8 @@
 
 #include <boost/regex.hpp>
 
+#include <iostream>
+
 using namespace std;
 using namespace dev;
 
@@ -90,7 +92,13 @@ string Whiskers::replace(
 		string tagName(_match[1]);
 		if (!tagName.empty())
 		{
-			assertThrow(_parameters.count(tagName), WhiskersError, "Value for tag " + tagName + " not provided.");
+			if (!_parameters.count(tagName))
+			{
+				cerr << "-------------- Whiskers error ----------------" << endl;
+				cerr << _template << endl;
+				cerr << "Value for tag " + tagName + " not provided." << endl;
+				assertThrow(false, WhiskersError, "Value for tag " + tagName + " not provided.");
+			}
 			return _parameters.at(tagName);
 		}
 		else

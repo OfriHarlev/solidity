@@ -60,6 +60,19 @@ std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::Don
 	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
 }
 
+/// Convert something to hex and then insert newlines at 32 byte boundaries
+template <class T>
+inline std::string toHexAndSplit(T const& _data)
+{
+	std::string str = toHex(_data);
+	std::string withNewlines;
+	for (size_t i = 0; i < str.length(); i += 0x20)
+		withNewlines += str.substr(i) + "\n";
+	return withNewlines;
+}
+
+
+
 /// Converts a (printable) ASCII hex character into the correspnding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
 int fromHex(char _i, WhenError _throw);
