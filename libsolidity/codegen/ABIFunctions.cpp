@@ -1156,7 +1156,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 		if (_type.isDynamicallySized())
 			templ = R"(
 				function <functionName>(offset, end) -> arrayPos, length {
-					length := mload(offset)
+					length := calldataload(offset)
 					switch gt(length, 0xffffffffffffffff) case 1 { revert(0, 0) }
 					arrayPos := add(offset, 0x20)
 					switch gt(add(arrayPos, mul(<length>, <baseEncodedSize>)), end) case 1 { revert(0, 0) }
@@ -1171,7 +1171,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 			)";
 		Whiskers w{templ};
 		w("functionName", functionName);
-		w("baseEncodedSize", toCompactHexWithPrefix(_type.baseType()->calldataEncodedSize()));
+		w("baseEncodedSize", toCompactHexWithPrefix(_type.isByteArray() ? 1 : _type.baseType()->calldataEncodedSize()));
 		w("length", _type.isDynamicallyEncoded() ? "length" : toCompactHexWithPrefix(_type.length()));
 		return w.render();
 	});
