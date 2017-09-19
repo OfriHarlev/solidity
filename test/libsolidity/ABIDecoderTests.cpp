@@ -315,13 +315,14 @@ BOOST_AUTO_TEST_CASE(short_input_value_type)
 {
 	string sourceCode = R"(
 		contract C {
-			function f(uint a) returns (uint) { return a; }
+			function f(uint a, uint b) returns (uint) { return a; }
 		}
 	)";
 	NEW_ENCODER(
 		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("f(uint256)", 1) == encodeArgs(1));
-		BOOST_CHECK(callContractFunction("f(uint256)", bytes(31, 0)) == encodeArgs(0));
+		BOOST_CHECK(callContractFunction("f(uint256,uint256)", 1, 2) == encodeArgs(1));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256,uint256)", bytes(64, 0)) == encodeArgs(0));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256,uint256)", bytes(63, 0)) == encodeArgs());
 	)
 }
 
@@ -334,9 +335,11 @@ BOOST_AUTO_TEST_CASE(short_input_array)
 	)";
 	NEW_ENCODER(
 		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("f(uint256[])", 0x20, 0) == encodeArgs(7));
-		BOOST_CHECK(callContractFunction("f(uint256[])", 0x20, 1) == encodeArgs());
-		BOOST_CHECK(callContractFunction("f(uint256[])", 0x20, 2, 5, 6) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1) + bytes(31, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 1) + bytes(32, 0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(uint256[])", encodeArgs(0x20, 2, 5, 6)) == encodeArgs(7));
 	)
 }
 
@@ -344,13 +347,20 @@ BOOST_AUTO_TEST_CASE(short_input_bytes)
 {
 	string sourceCode = R"(
 		contract C {
+			function e(bytes a) returns (uint) { return 7; }
 			function f(bytes[] a) returns (uint) { return 7; }
 		}
 	)";
 	NEW_ENCODER(
 		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("f(bytes[])", 0x20, 1, 0x20, 7, bytes(7, 0)) == encodeArgs(7));
-		BOOST_CHECK(callContractFunction("f(bytes[])", 0x20, 1, 0x20, 7, bytes(6, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("e(bytes)", encodeArgs(0x20, 7) + bytes(5, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("e(bytes)", encodeArgs(0x20, 7) + bytes(6, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("e(bytes)", encodeArgs(0x20, 7) + bytes(7, 0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("e(bytes)", encodeArgs(0x20, 7) + bytes(8, 0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(bytes[])", encodeArgs(0x20, 1, 0x40, 7) + bytes(5, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("f(bytes[])", encodeArgs(0x20, 1, 0x40, 7) + bytes(6, 0)) == encodeArgs());
+		BOOST_CHECK(callContractFunctionNoEncoding("f(bytes[])", encodeArgs(0x20, 1, 0x40, 7) + bytes(7, 0)) == encodeArgs(7));
+		BOOST_CHECK(callContractFunctionNoEncoding("f(bytes[])", encodeArgs(0x20, 1, 0x40, 7) + bytes(8, 0)) == encodeArgs(7));
 	)
 }
 
@@ -379,9 +389,6 @@ BOOST_AUTO_TEST_CASE(cleanup_int_inside_arrays)
 }
 
 // test decoding storage pointers
-
-// test that byte arrays in pure calldata and properly decoded into memory
-// are valid, even if they do not have padding (i.e. the length check does not throw)
 
 // TODO: ridiculously sized arrays, also when the size comes from deeply nested "short" arrays
 
