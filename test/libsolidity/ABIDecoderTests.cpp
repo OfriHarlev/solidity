@@ -211,6 +211,42 @@ BOOST_AUTO_TEST_CASE(dynamic_nested_arrays)
 		);
 	)
 }
+
+BOOST_AUTO_TEST_CASE(byte_arrays)
+{
+	string sourceCode = R"(
+		contract C {
+			function f(uint a, bytes b, uint c) public
+					pure returns (uint, uint, byte, uint) {
+				return (a, b.length, b[3], c);
+			}
+
+			function f_external(uint a, bytes b, uint c) external
+					pure returns (uint, uint, byte, uint) {
+				return (a, b.length, b[3], c);
+			}
+		}
+	)";
+	int enc= 0;
+	BOTH_ENCODERS(
+		compileAndRun(sourceCode);
+		bytes args = encodeArgs(
+			6, 0x60, 9,
+			7, "abcdefg"
+		);
+	cout << enc++ << endl;
+	cout << toHexAndSplit(callContractFunction("f(uint256,bytes,uint256)", args)) << endl;
+		BOOST_CHECK(
+			callContractFunction("f(uint256,bytes,uint256)", args) ==
+			encodeArgs(u256(6), u256(7), 'd')
+		);
+		BOOST_CHECK(
+			callContractFunction("f_external(uint256,bytes,uint256)", args) ==
+			encodeArgs(u256(6), u256(7), 'd')
+		);
+	)
+}
+
 // dynamic nested arrays
 
 // calldata types
